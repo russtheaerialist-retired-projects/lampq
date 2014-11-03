@@ -28,7 +28,7 @@ class LineReader(object):
                 callback, on_remove = self._get_entry(f)
                 if not hasattr(f, "readline"):
                     # This is server socket that's accepting a connection, so we won't read a line from it
-                    callback(self, f)
+                    callback(self, f, f)
                     continue
 
                 try:
@@ -63,7 +63,7 @@ class LineReader(object):
             try:
                 item = q.get_nowait()
                 callback, _ = self._get_entry(f)
-                should_exit = callback(self, item)
+                should_exit = callback(self, f, item)
                 if should_exit:
                     self.stop()
                     return False

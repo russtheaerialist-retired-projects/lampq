@@ -7,7 +7,7 @@ import logging
 from lampq.yun import Yun
 from lampq.line_reader import LineReader
 from lampq.server import ListeningServer
-from lampq.cmd import Registry, UnknownCommandError
+from lampq.cmd import Registry, CommandError
 
 logger = logging.getLogger(__name__)
 
@@ -19,19 +19,27 @@ def main(args=sys.argv[1:]):
         logger.info("Received EOF from Console, Shutting Down")
         return True
 
-    def run_command(_, cmd):
+    def run_command(_, file, cmd):
         try:
             Registry.run_command_script(cmd)
-        except UnknownCommandError:
+        except CommandError, ex:
+            logger.error("{0}: {1}".format(ex.message, cmd))
             return False
+
         except:
             logger.error("Unknown Error", exc_info=True)
 
     def quit_command(cmd, *args, **kwargs):
         return True
 
+    def echo(cmd, args):
+        return "{0} = {1}".format(cmd, args)
+
     Registry.register("quit", quit_command)
-    Registry.register("echo", lambda cmd,args: args)
+    Registry.register("echo", echo, require_arguments=True)
+    Registry.register("modechange", echo, require_arguments=True)
+    Registry.register("queue", echo)
+    Registry.register("setmode", echo, require_arguments=True)
 
     reader = LineReader({
         sys.stdin: (run_command, exit_on_close),
