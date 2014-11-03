@@ -24,6 +24,9 @@ class ConsoleWrapper(object):
 
 def main(args=sys.argv[1:]):
 
+    ECHO = Command("echo", lambda file, cmd, args: file.write("OK:{0} = {1}".format(cmd, args)),
+                   has_parameters=True, secure=False)
+
     logging.basicConfig(level=logging.DEBUG)
 
     def exit_on_close(reader, connection):
@@ -35,26 +38,17 @@ def main(args=sys.argv[1:]):
             Registry.run_command_script(file, cmd)
         except CommandError, ex:
             logger.error("{0}: {1}".format(ex.message, cmd))
-
+            # TODO: Return error message to console
             return False
 
         except:
             logger.error("Unknown Error", exc_info=True)
 
-    ECHO = Command("echo", lambda file, cmd, args: file.write("{0} = {1}".format(cmd, args)),
-                   has_parameters=True, secure=False)
-
-    def quit_command(file, cmd, *args, **kwargs):
-        return True
-
-    def echo(file, cmd, args):
-        return "{0} = {1}".format(cmd, args)
-
-
 
     reader = LineReader({
         ConsoleWrapper(): (run_command, exit_on_close),
     })
+
     yun = Yun(reader, Registry)
 
     Registry.register(ECHO)

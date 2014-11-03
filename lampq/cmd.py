@@ -51,7 +51,7 @@ class _Registry(object):
             raise ArgumentRequiredError(cmd)
 
         if cmdobj.secure and not Command.is_secure(file):
-            # Secure commands are only available to secure connections
+            # Secure commands are only available to secure connections, i.e. stdin/stdout
             raise UnknownCommandError(cmd)
 
         return cmdobj.callback(file, cmd, arguments)
