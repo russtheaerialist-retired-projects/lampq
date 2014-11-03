@@ -2,6 +2,7 @@ import threading
 import select
 import collections
 import Queue
+import sys
 
 class LineIncomplete(Exception): pass
 
@@ -47,6 +48,15 @@ class LineReader(object):
 
     def _get_entry(self, f):
         return self._map.get(f, (lambda x, y: False, lambda x, y: False))
+
+    def send_all(self, msg):
+        for f in self._map.keys():
+            if f == sys.stdin:
+                f = sys.stdout
+            if hasattr(f, "write"):
+                f.write("{0}\n".format(msg))
+            if hasattr(f, "flush"):
+                f.flush()
 
     def process(self):
         for f, q in self._queues.items():

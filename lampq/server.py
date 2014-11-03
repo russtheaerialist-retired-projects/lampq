@@ -2,10 +2,11 @@ import socket
 import logging
 
 from lampq.line_reader import LineIncomplete
+from lampq.cmd import Registry, UnknownCommandError
 
 logger = logging.getLogger(__name__)
 
-class ReadlineSocketWrapper(object):
+class SocketWrapper(object):
     def __init__(self, sock):
         self._sock = sock
         self._buffer = []
@@ -32,7 +33,14 @@ class ReadlineSocketWrapper(object):
         line = data[:newline-1]
         self._buffer = [ data[newline+1:] ]
 
-        return line
+        if line:
+            return line
+
+        # If it's an empty line, it's "incomplete"
+        raise LineIncomplete()
+
+    def write(self, msg):
+        self._sock.sendall(msg)
 
 class ListeningServer(object):
     def __init__(self, reader, port):
@@ -47,13 +55,31 @@ class ListeningServer(object):
         new_socket.setblocking(0)  # Non-blocking
         logger.info("New Connection from: {0}".format(address))
 
-        wrapper = ReadlineSocketWrapper(new_socket)
+        wrapper = SocketWrapper(new_socket)
 
         self._connections.append(wrapper)
         reader.add(wrapper, self._process_command, self._remove_connection)
 
     def _process_command(self, reader, line):
-        print(line)
+        try:
+            data = Registry.run_command_script(line)
+            if isinstance(data, bool):
+                return data
+            else:
+                reader.send_all(data)
+        except UnknownCommandError:
+            logger.error("Unknown Error: {0}".format(line))
 
     def _remove_connection(self, reader, f):
         f.close()
+
+    def shutdown(self):
+        for c in self._connections:
+            try:
+                c.shutdown(socket.SHUT_RDWR)
+            except socket.error:
+                pass
+        try:
+            self._socket.shutdown(socket.SHUT_RDWR)
+        except socket.error:
+            pass
