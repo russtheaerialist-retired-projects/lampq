@@ -80,9 +80,11 @@ class ListeningServer(object):
         for c in self._connections:
             try:
                 c.shutdown(socket.SHUT_RDWR)
+                c.close()
             except socket.error:
                 pass
         try:
             self._socket.shutdown(socket.SHUT_RDWR)
+            self._socket.close()
         except socket.error:
             pass

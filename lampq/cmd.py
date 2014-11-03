@@ -9,7 +9,7 @@ class ArgumentRequiredError(CommandError):
         super(ArgumentRequiredError, self).__init__("Command {0} Requires Arguments".format(cmd))
 
 class Command(object):
-    def __init__(self, name, callback, has_parameters, secure):
+    def __init__(self, name, callback, has_parameters=False, secure=False):
         self.name = name
         self.callback = callback
         self.has_parameters = has_parameters
@@ -17,6 +17,10 @@ class Command(object):
 
     def __repr__(self):
         return "CMD:{0}".format(self.name)
+
+    @staticmethod
+    def is_secure(file):
+        return hasattr(file, "is_secure") and file.is_secure
 
 
 class _Registry(object):
@@ -44,10 +48,9 @@ class _Registry(object):
 
         cmdobj = self._cmds.get(cmd, self._UNKNOWN)
         if cmdobj.has_parameters and not arguments:
-            print(cmdobj, cmdobj.has_parameters, cmdobj.secure)
             raise ArgumentRequiredError(cmd)
 
-        if cmdobj.secure and not (hasattr(file, "is_secure") and file.is_secure):
+        if cmdobj.secure and not Command.is_secure(file):
             # Secure commands are only available to secure connections
             raise UnknownCommandError(cmd)
 

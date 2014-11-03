@@ -41,8 +41,8 @@ def main(args=sys.argv[1:]):
         except:
             logger.error("Unknown Error", exc_info=True)
 
-    QUIT = Command("quit", lambda x, y, z: True, False, False)
-    ECHO = Command("echo", lambda file, cmd, args: file.write("{0} = {1}".format(cmd, args)), False, False)
+    ECHO = Command("echo", lambda file, cmd, args: file.write("{0} = {1}".format(cmd, args)),
+                   has_parameters=True, secure=False)
 
     def quit_command(file, cmd, *args, **kwargs):
         return True
@@ -55,17 +55,14 @@ def main(args=sys.argv[1:]):
     reader = LineReader({
         ConsoleWrapper(): (run_command, exit_on_close),
     })
-    yun = Yun(reader)
+    yun = Yun(reader, Registry)
 
-    Registry.register(QUIT)
     Registry.register(ECHO)
-    Registry.register(yun.CMD_QUEUE)
-    Registry.register(yun.CMD_SETMODE)
-    Registry.register(yun.CMD_POPMODE)
 
     server = ListeningServer(reader, 9090)
 
     reader.start()
+    sys.stdout.write("HELLO:1.0.0\n")
 
     try:
         while reader.process():
