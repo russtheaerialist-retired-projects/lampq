@@ -62,15 +62,15 @@ class ListeningServer(object):
 
     def _process_command(self, reader, file, line):
         try:
-            data = Registry.run_command_script(line)
+            data = Registry.run_command_script(file, line)
             if isinstance(data, bool):
                 return data
-            else:
-                reader.send_all(data)
         except CommandError, ex:
             logger.error("{0}: {1}".format(ex.message, line))
             error = "error:{0}\n".format(ex.message)
             file.write(error)
+
+        return False
 
 
     def _remove_connection(self, reader, f):

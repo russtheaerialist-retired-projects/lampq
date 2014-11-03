@@ -3,6 +3,9 @@ import select
 import collections
 import Queue
 import sys
+import logging
+
+logger = logging.getLogger(__name__)
 
 class LineIncomplete(Exception): pass
 
@@ -18,11 +21,13 @@ class LineReader(object):
         self._thread.start()
 
     def stop(self):
+        logger.debug("Sending stop")
         self._stop_signal.set()
         self._thread.join()
+        logger.info("Line Reader stopped")
 
     def _run(self):
-        while not self._stop_signal.is_set() and len(self._map):
+        while not self._stop_signal.is_set() and len(self._map)>1:
             ready = select.select(self._map,[],[],0.0)[0]
             for f in ready:
                 callback, on_remove = self._get_entry(f)
@@ -51,8 +56,6 @@ class LineReader(object):
 
     def send_all(self, msg):
         for f in self._map.keys():
-            if f == sys.stdin:
-                f = sys.stdout
             if hasattr(f, "write"):
                 f.write("{0}\n".format(msg))
             if hasattr(f, "flush"):
@@ -65,6 +68,7 @@ class LineReader(object):
                 callback, _ = self._get_entry(f)
                 should_exit = callback(self, f, item)
                 if should_exit:
+                    logger.debug("Callback returned True, exiting")
                     self.stop()
                     return False
             except Queue.Empty:
