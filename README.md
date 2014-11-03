@@ -32,7 +32,8 @@ LampQ is a python program that sits on a publicly facing server that has ssh ena
 requests from the outside world (via a webpage), and makes those requests available to LampY.  It handles keeping
 track of the queue of requests and providing them to LampY when needed.
 
-For information on the communication protocol, please see the README in the lampq directory
+For information on the communication protocol, please see the
+[README in the lampq directory](https://github.com/RussTheAerialist/lampq/tree/master/lampq)
 
 LampY
 -------
@@ -44,4 +45,5 @@ the only thing you can run.
 LampY can be modified by the end user to add whatever modes they would like to have in their lamp, but I have a
 number of useful and fun modes available.
 
-For information on the modes, please see the README in the lampy directory
+For information on the modes, please see the
+[README in the lampy directory](https://github.com/RussTheAerialist/lampq/tree/master/lampy)
