@@ -1,0 +1,3 @@
+[submodule "FastLED"]
+	path = lampy/FastLED
+	url = https://github.com/FastLED/FastLED.git
