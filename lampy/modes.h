@@ -22,6 +22,14 @@ void off(CRGB* leds, uint8_t numPix) {
 }
 
 ////////////////////////////////////////////////////////////////////
+// Mode White - by Russell Hay
+// Turns all of the leds grey
+void all_white(CRGB* leds, uint8_t numPix) {
+  FastLED.showColor(CRGB::White);
+}
+
+
+////////////////////////////////////////////////////////////////////
 // Mode Blue - by Russell Hay
 // Turns all of the leds Blue
 void all_blue(CRGB* leds, uint8_t numPix) {

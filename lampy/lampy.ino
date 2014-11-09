@@ -1,4 +1,4 @@
-#include <Serial.h>
+
 #include <Encoder.h>
 #include <FastLED.h>
 #include "modes.h"
@@ -8,10 +8,17 @@
 
 #define ENCODER_PIN_1 7
 #define ENCODER_PIN_2 8
-#define MAX_MODES 7
+#define BUTTON_PIN 9
+#define MAX_MODES 8
 #define FRAME_DELAY 500
+#define DEBOUNCE_TIME 250
+#define AUTO_CYCLE_TIME 60000
 
 int mode=0, next_mode=0, data=0;
+boolean cycle_modes = false;
+int button_state = HIGH, last_button_state = HIGH;
+int last_button_press = 0;
+long last_mode_change = 0;
 int old_position=0;
 Encoder control(ENCODER_PIN_1, ENCODER_PIN_2);
 CRGB leds[NUM_LEDS];
@@ -19,6 +26,7 @@ long last_frame = 0;
 
 const mode_entry_t modes[MAX_MODES] = {
   {-1, off},
+  {-1, all_white},
   {-1, all_blue},
   {-1, all_red},
   {-1, all_green},
@@ -29,18 +37,50 @@ const mode_entry_t modes[MAX_MODES] = {
 
 void setup() {
   Serial.begin(9600);
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
   FastLED.addLeds<WS2801, DATA_PIN, CLOCK_PIN, RGB>(leds, NUM_LEDS).setCorrection( TypicalLEDStrip );
   FastLED.clear();
   FastLED.show();
+
+}
+
+inline void read_button() {
+   button_state = digitalRead(BUTTON_PIN);
+  if (button_state == LOW && 
+      last_button_state != LOW &&
+      millis() - last_button_press > DEBOUNCE_TIME) {
+    cycle_modes = !cycle_modes;
+    last_button_press = millis();
+    for(int i=0;i<3;i++) {
+      FastLED.showColor(cycle_modes ? CRGB::Red : CRGB::Green);
+      FastLED.delay(1000);
+      FastLED.clear();
+      FastLED.show();
+      FastLED.delay(500);
+    }
+    Serial.print(cycle_modes ? "Starting" : "Stopping");
+    Serial.println(" Cycle mode");
+    next_mode = 1;
+    last_mode_change = millis();
+  }
+  last_button_state = button_state;
 }
 
 void loop() {
   data = control.read();
-  Serial.print(data);
-  Serial.print("-");
+  read_button();
+  
   if ((data != old_position)&&(data%4 == 0)) {
     next_mode += (data - old_position)/4;
     old_position = data;
+  }
+  
+  if (cycle_modes && (millis() - last_mode_change) > AUTO_CYCLE_TIME) {
+    next_mode = (mode + 1) % MAX_MODES;
+    if (next_mode == 0) {
+      next_mode = 1;  // skip off mode
+    }
+    last_mode_change = millis();
   }
   
   if(next_mode != mode) {
@@ -57,5 +97,4 @@ void loop() {
     modes[mode].func(leds, NUM_LEDS);
     last_frame = millis();
   }
-  Serial.println(mode);
 }
