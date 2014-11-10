@@ -43,8 +43,12 @@ void setup() {
   pinMode(BUTTON_PIN, INPUT_PULLUP);
   FastLED.addLeds<WS2801, DATA_PIN, CLOCK_PIN, RGB>(leds, NUM_LEDS).setCorrection( TypicalLEDStrip );
   FastLED.clear();
-  FastLED.show();
-
+  for(int i=0;i<NUM_LEDS;i++) {
+      leds[i] = CRGB::White;
+      FastLED.show();
+      delay(50);
+    }
+  Serial.println("done");
 }
 
 inline void read_button() {
