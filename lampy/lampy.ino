@@ -9,12 +9,14 @@
 #define ENCODER_PIN_1 7
 #define ENCODER_PIN_2 8
 #define BUTTON_PIN 9
-#define MAX_MODES 8
+#define MAX_MODES 9
 #define FRAME_DELAY 500
 #define DEBOUNCE_TIME 250
 #define AUTO_CYCLE_TIME 60000
+#define START_MODE 1
+#define OFF_MODE 0
 
-int mode=0, next_mode=0, data=0;
+int mode=START_MODE, next_mode=START_MODE, data=0;
 boolean cycle_modes = false;
 int button_state = HIGH, last_button_state = HIGH;
 int last_button_press = 0;
@@ -32,7 +34,8 @@ const mode_entry_t modes[MAX_MODES] = {
   {-1, all_green},
   {500, police},
   {100, random_decay},
-  {100, palette_swap}
+  {100, palette_swap},
+  {100, palette_wave}
 };
 
 void setup() {
@@ -52,15 +55,17 @@ inline void read_button() {
     cycle_modes = !cycle_modes;
     last_button_press = millis();
     for(int i=0;i<3;i++) {
-      FastLED.showColor(cycle_modes ? CRGB::Red : CRGB::Green);
-      FastLED.delay(1000);
-      FastLED.clear();
+      fill_solid(leds, NUM_LEDS, cycle_modes ? CRGB::Red : CRGB::Green);
       FastLED.show();
       FastLED.delay(500);
+      FastLED.clear();
+      FastLED.show();
+      FastLED.delay(250);
     }
     Serial.print(cycle_modes ? "Starting" : "Stopping");
     Serial.println(" Cycle mode");
-    next_mode = 1;
+    next_mode = START_MODE;
+    mode = OFF_MODE;
     last_mode_change = millis();
   }
   last_button_state = button_state;
@@ -77,8 +82,8 @@ void loop() {
   
   if (cycle_modes && (millis() - last_mode_change) > AUTO_CYCLE_TIME) {
     next_mode = (mode + 1) % MAX_MODES;
-    if (next_mode == 0) {
-      next_mode = 1;  // skip off mode
+    if (next_mode == OFF_MODE) {
+      next_mode = START_MODE;  // skip off mode
     }
     last_mode_change = millis();
   }

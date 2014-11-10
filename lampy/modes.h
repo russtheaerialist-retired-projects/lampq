@@ -3,11 +3,17 @@
 
 #include <FastLED.h>
 
+#define LERP_DURATION 5000
+
 typedef void (*voidfunc_t)(CRGB*, uint8_t);
 typedef struct {
   int delay;
   voidfunc_t func;
 } mode_entry_t;
+typedef struct {
+  const uint32_t *palette;
+  TBlendType blend;
+} palette_entry_t;
 int step=0;
 uint8_t startIndex = 0;
 CRGBPalette16 currentPalette = RainbowColors_p;
@@ -104,7 +110,7 @@ void random_decay(CRGB *leds, uint8_t numPix) {
 // https://github.com/FastLED/FastLED/blob/master/examples/ColorPalette/ColorPalette.ino
 void _ChangePalettePeriodically() {
   uint8_t secondHand = (millis() / 1000) % 60;
-  
+
   if (step != secondHand) {
     step = secondHand;
     switch(secondHand) {
@@ -128,7 +134,8 @@ void _ChangePalettePeriodically() {
   }
 }
 
-void _FillLEDsFromPaletteColors(CRGB* leds, uint8_t numPix, uint8_t colorIndex) {
+inline void _FillLEDsFromPaletteColors(CRGB* leds, uint8_t numPix, uint8_t colorIndex) {
+
   for(int i=0; i<numPix; i++) {
     leds[i] = ColorFromPalette(currentPalette, colorIndex, 255 /* Brightness */, currentBlend);
     colorIndex += 3;
@@ -143,5 +150,14 @@ void palette_swap(CRGB* leds, uint8_t numPix) {
   _FillLEDsFromPaletteColors(leds, numPix, startIndex);
   FastLED.show();
 }
+
+void palette_wave(CRGB* leds, uint8_t numPix) {
+  _ChangePalettePeriodically();
+  
+  startIndex += 1;
+  _FillLEDsFromPaletteColors(leds, numPix, cubicwave8(startIndex));
+  FastLED.show();
+}
+
 
 #endif
