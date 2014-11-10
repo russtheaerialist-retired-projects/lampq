@@ -60,9 +60,8 @@ void all_green(CRGB* leds, uint8_t numPix) {
 // Mode Police - by Russell Hay
 // Alternating Red and Blue leds that switch color every half second
 void police(CRGB* leds, uint8_t numPix) {
-  for(int i=0;i<numPix;i++) {
-    leds[i] = (i+step) % 2 ? CRGB::Blue : CRGB::Red;
-  }
+  fill_solid(leds, numPix/2, step ? CRGB::Blue : CRGB::Red);
+  fill_solid(&(leds[numPix/2]), numPix/2, step ? CRGB::Red : CRGB::Blue);
   step = (step+1) % 2;
   FastLED.show();
 }
